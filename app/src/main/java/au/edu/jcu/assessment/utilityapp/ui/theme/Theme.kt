@@ -1,57 +1,69 @@
 package au.edu.jcu.assessment.utilityapp.ui.theme
 
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
+private val LightColors = lightColorScheme(
+    primary = MossPrimary,
+    onPrimary = MossOnPrimary,
+    primaryContainer = MossContainer,
+    onPrimaryContainer = MossOnContainer,
+    secondary = SageSecondary,
+    onSecondary = MossOnPrimary,
+    secondaryContainer = SageContainer,
+    onSecondaryContainer = SageOnContainer,
+    tertiary = MarigoldTertiary,
+    onTertiary = MossOnPrimary,
+    tertiaryContainer = MarigoldContainer,
+    background = MistBackground,
+    onBackground = MistInk,
+    surface = MistBackground,
+    onSurface = MistInk,
+    surfaceVariant = MistVariant,
+    onSurfaceVariant = MistInkMuted,
+    surfaceContainer = MistBar,
+    surfaceContainerHigh = MistCard,
+    outline = MistOutline,
+    outlineVariant = MistOutlineSoft
 )
 
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
-    onPrimary = Color.White,
-    onSecondary = Color.White,
-    onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+private val DarkColors = darkColorScheme(
+    primary = DarkMossPrimary,
+    onPrimary = DarkMossOnPrimary,
+    primaryContainer = DarkMossContainer,
+    onPrimaryContainer = DarkMossOnContainer,
+    secondary = DarkSageSecondary,
+    onSecondary = DarkMossOnPrimary,
+    secondaryContainer = DarkSageContainer,
+    onSecondaryContainer = DarkSageOnContainer,
+    tertiary = DarkMarigoldTertiary,
+    onTertiary = DarkMossOnPrimary,
+    tertiaryContainer = DarkMarigoldContainer,
+    background = NightBackground,
+    onBackground = NightInk,
+    surface = NightBackground,
+    onSurface = NightInk,
+    surfaceVariant = NightVariant,
+    onSurfaceVariant = NightInkMuted,
+    surfaceContainer = NightBar,
+    surfaceContainerHigh = NightCard,
+    outline = NightOutline,
+    outlineVariant = NightOutlineSoft
 )
 
+/** Material 3 theme for the app. Follows the system light/dark setting. */
 @Composable
-fun MobileTech_UtilityAppTheme(
+fun CalmSkiesTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
-
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = if (darkTheme) DarkColors else LightColors,
         typography = Typography,
+        shapes = Shapes,
         content = content
     )
 }

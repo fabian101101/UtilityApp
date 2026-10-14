@@ -5,11 +5,13 @@ plugins {
 }
 
 android {
+    // The namespace (package of the code) stays the same as the starter template.
     namespace = "au.edu.jcu.assessment.utilityapp"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "au.edu.jcu.assessment.utilityapp"
+        // A different applicationId lets this app be installed next to the quotes app.
+        applicationId = "au.edu.jcu.assessment.utilityapp.calmskies"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -41,6 +43,7 @@ android {
 
 dependencies {
 
+    // Android / Compose core
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -49,7 +52,22 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.material.icons.extended)
+
+    // Architecture: ViewModel + lifecycle-aware state collection
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+
+    // Networking
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+
+    // Device location
+    implementation(libs.play.services.location)
+
+    // Tests
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -1,3 +1,69 @@
 <resources>
-    <string name="app_name">MobileTech Utility App</string>
+    <string name="app_name">Calm Skies</string>
+
+    <!-- Navigation -->
+    <string name="tab_session">Session</string>
+    <string name="tab_settings">Settings</string>
+
+    <!-- Weather card -->
+    <string name="location_current">Current location</string>
+    <string name="weather_loading">Checking the weather</string>
+    <string name="weather_error_title">Weather unavailable</string>
+    <string name="weather_error_body">Your timer still works. Check your connection and try again.</string>
+    <string name="location_error_title">Could not find you</string>
+    <string name="location_error_body">Turn on location services, or search for a place in Settings.</string>
+    <string name="permission_title">Where are you?</string>
+    <string name="permission_body">Allow location access to see the weather where you are, or search for a place instead.</string>
+    <string name="action_allow_location">Allow location</string>
+    <string name="action_search_place">Search a place</string>
+    <string name="action_retry">Try again</string>
+    <string name="condition_clear_day">Clear</string>
+    <string name="condition_clear_night">Clear night</string>
+    <string name="condition_cloudy">Cloudy</string>
+    <string name="condition_fog">Foggy</string>
+    <string name="condition_rain">Rain</string>
+    <string name="condition_snow">Snow</string>
+    <string name="condition_storm">Thunderstorms</string>
+    <string name="suggestion_clear">Clear skies. Try %1$d minutes by a window or outside.</string>
+    <string name="suggestion_cloudy">Soft light today. A steady count of %1$d minutes suits it.</string>
+    <string name="suggestion_fog">Slow and quiet outside. Take %1$d minutes and follow your breath.</string>
+    <string name="suggestion_rain">Rain outside. Take %1$d minutes indoors and listen to it.</string>
+    <string name="suggestion_snow">Hushed and still. Settle in for %1$d minutes.</string>
+    <string name="suggestion_storm">Stormy out. Keep it short: %1$d minutes, feet flat on the floor.</string>
+
+    <!-- Timer -->
+    <string name="status_ready">Ready</string>
+    <string name="status_running">Breathe</string>
+    <string name="status_paused">Paused</string>
+    <string name="status_finished">Session complete</string>
+    <string name="action_start">Start session</string>
+    <string name="action_pause">Pause session</string>
+    <string name="action_reset">Reset timer</string>
+    <string name="stat_minutes">minutes today</string>
+    <plurals name="stat_sessions">
+        <item quantity="one">session today</item>
+        <item quantity="other">sessions today</item>
+    </plurals>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_subtitle">Changes apply to the session screen straight away.</string>
+    <string name="settings_suggestion_title">Use weather suggestion</string>
+    <string name="settings_suggestion_desc">Picks the session length from the weather outside.</string>
+    <string name="settings_length_title">Session length</string>
+    <string name="settings_length_desc">Used when the weather suggestion is off.</string>
+    <string name="length_option">%1$d min</string>
+    <string name="settings_location_title">Location</string>
+    <string name="settings_location_showing">Showing weather for %1$s</string>
+    <string name="settings_location_current_name">your current location</string>
+    <string name="settings_use_current">Use my current location</string>
+    <string name="search_hint">Search for a place</string>
+    <string name="search_clear">Clear search</string>
+    <string name="search_empty">No places found. Try another spelling.</string>
+    <string name="search_error">Could not search. Check your connection.</string>
+    <string name="search_loading">Searching</string>
+    <string name="settings_unit_title">Temperature</string>
+    <string name="unit_celsius">Celsius</string>
+    <string name="unit_fahrenheit">Fahrenheit</string>
+    <string name="settings_attribution">Weather data by Open-Meteo.com</string>
 </resources>

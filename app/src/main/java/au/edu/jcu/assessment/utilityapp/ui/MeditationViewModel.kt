@@ -7,8 +7,13 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import au.edu.jcu.assessment.utilityapp.CalmSkiesApplication
+import au.edu.jcu.assessment.utilityapp.data.LocationPermissionException
+import au.edu.jcu.assessment.utilityapp.data.LocationRepository
+import au.edu.jcu.assessment.utilityapp.data.LocationUnavailableException
+import au.edu.jcu.assessment.utilityapp.data.PlaceRepository
 import au.edu.jcu.assessment.utilityapp.data.WeatherRepository
-import au.edu.jcu.assessment.utilityapp.data.model.City
+import au.edu.jcu.assessment.utilityapp.data.model.Coordinates
+import au.edu.jcu.assessment.utilityapp.data.model.Place
 import au.edu.jcu.assessment.utilityapp.data.model.TemperatureUnit
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -20,19 +25,31 @@ import kotlinx.coroutines.launch
 
 private const val TICK_MILLIS = 1_000L
 private const val SECONDS_PER_MINUTE = 60
+private const val SEARCH_DEBOUNCE_MILLIS = 400L
+private const val MIN_SEARCH_LENGTH = 2
 
 /**
- * Holds the weather, the meditation timer, today's totals and the settings.
+ * Holds the weather, the place search, the meditation timer, today's totals and the settings.
  * Both screens share this one ViewModel so a settings change shows on the session screen,
  * and the timer keeps running when the screen rotates.
  */
-class MeditationViewModel(private val weatherRepository: WeatherRepository) : ViewModel() {
+class MeditationViewModel(
+    private val weatherRepository: WeatherRepository,
+    private val placeRepository: PlaceRepository,
+    private val locationRepository: LocationRepository
+) : ViewModel() {
 
     private val _settings = MutableStateFlow(MeditationSettings())
     val settings: StateFlow<MeditationSettings> = _settings.asStateFlow()
 
     private val _weather = MutableStateFlow<WeatherUiState>(WeatherUiState.Loading)
     val weather: StateFlow<WeatherUiState> = _weather.asStateFlow()
+
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    private val _searchState = MutableStateFlow<PlaceSearchState>(PlaceSearchState.Idle)
+    val searchState: StateFlow<PlaceSearchState> = _searchState.asStateFlow()
 
     private val _timer = MutableStateFlow(TimerUiState.idle(_settings.value.sessionMinutes))
     val timer: StateFlow<TimerUiState> = _timer.asStateFlow()
@@ -41,6 +58,7 @@ class MeditationViewModel(private val weatherRepository: WeatherRepository) : Vi
     val today: StateFlow<DayStats> = _today.asStateFlow()
 
     private var weatherJob: Job? = null
+    private var searchJob: Job? = null
     private var tickerJob: Job? = null
 
     init {
@@ -49,25 +67,94 @@ class MeditationViewModel(private val weatherRepository: WeatherRepository) : Vi
 
     // ----- Weather -----
 
-    /** Loads the weather for the current city and unit. Also used by the retry button. */
+    /**
+     * Loads the weather for the chosen location: the phone's position, or the searched place.
+     * Also used by the retry button and after the permission dialog closes.
+     */
     fun refreshWeather() {
         weatherJob?.cancel()
         weatherJob = viewModelScope.launch {
             _weather.value = WeatherUiState.Loading
             val settings = _settings.value
-            weatherRepository.getCurrentWeather(settings.city, settings.unit)
-                .onSuccess { _weather.value = WeatherUiState.Success(it) }
-                .onFailure { _weather.value = WeatherUiState.Error }
+            _weather.value = resolveCoordinates(settings).fold(
+                onSuccess = { coordinates ->
+                    weatherRepository.getCurrentWeather(coordinates, settings.unit).fold(
+                        onSuccess = { WeatherUiState.Success(it) },
+                        onFailure = { WeatherUiState.Error(WeatherError.Network) }
+                    )
+                },
+                onFailure = { error ->
+                    if (error is LocationPermissionException) {
+                        WeatherUiState.NeedsPermission
+                    } else {
+                        WeatherUiState.Error(WeatherError.Location)
+                    }
+                }
+            )
             syncIdleDuration()
         }
     }
 
-    // ----- Settings -----
+    private suspend fun resolveCoordinates(settings: MeditationSettings): Result<Coordinates> =
+        when {
+            settings.useCurrentLocation -> locationRepository.getCurrentLocation()
+            settings.place != null -> Result.success(settings.place.coordinates)
+            else -> Result.failure(LocationUnavailableException())
+        }
 
-    fun onCityChange(city: City) {
-        _settings.update { it.copy(city = city) }
+    // ----- Location choice and place search -----
+
+    /** Switches to the phone's position. The UI asks for permission if it is missing. */
+    fun onUseCurrentLocation() {
+        _settings.update { it.copy(useCurrentLocation = true) }
         refreshWeather()
     }
+
+    /** Called when the permission dialog closes, whatever the answer was. */
+    fun onPermissionResult() {
+        if (_settings.value.useCurrentLocation) refreshWeather()
+    }
+
+    fun onPlaceSelected(place: Place) {
+        _settings.update { it.copy(useCurrentLocation = false, place = place) }
+        clearSearch()
+        refreshWeather()
+    }
+
+    /** Searches as the user types, waiting a moment so it does not fire on every keystroke. */
+    fun onSearchQueryChange(query: String) {
+        _searchQuery.value = query
+        search(query.trim(), debounce = true)
+    }
+
+    /** Searches straight away, for the keyboard's search button. */
+    fun onSearchSubmit() = search(_searchQuery.value.trim(), debounce = false)
+
+    private fun search(query: String, debounce: Boolean) {
+        searchJob?.cancel()
+        if (query.length < MIN_SEARCH_LENGTH) {
+            _searchState.value = PlaceSearchState.Idle
+            return
+        }
+        searchJob = viewModelScope.launch {
+            if (debounce) delay(SEARCH_DEBOUNCE_MILLIS)
+            _searchState.value = PlaceSearchState.Loading
+            _searchState.value = placeRepository.searchPlaces(query).fold(
+                onSuccess = { places ->
+                    if (places.isEmpty()) PlaceSearchState.Empty else PlaceSearchState.Results(places)
+                },
+                onFailure = { PlaceSearchState.Error }
+            )
+        }
+    }
+
+    private fun clearSearch() {
+        searchJob?.cancel()
+        _searchQuery.value = ""
+        _searchState.value = PlaceSearchState.Idle
+    }
+
+    // ----- Settings -----
 
     fun onUnitChange(unit: TemperatureUnit) {
         _settings.update { it.copy(unit = unit) }
@@ -145,11 +232,15 @@ class MeditationViewModel(private val weatherRepository: WeatherRepository) : Vi
     }
 
     companion object {
-        /** Builds the ViewModel with the repository from the application's container. */
+        /** Builds the ViewModel with the repositories from the application's container. */
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as CalmSkiesApplication
-                MeditationViewModel(app.container.weatherRepository)
+                MeditationViewModel(
+                    weatherRepository = app.container.weatherRepository,
+                    placeRepository = app.container.placeRepository,
+                    locationRepository = app.container.locationRepository
+                )
             }
         }
     }

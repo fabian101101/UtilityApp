@@ -12,7 +12,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import au.edu.jcu.assessment.utilityapp.R
-import au.edu.jcu.assessment.utilityapp.data.model.City
 import au.edu.jcu.assessment.utilityapp.data.model.TemperatureUnit
 import au.edu.jcu.assessment.utilityapp.ui.components.DayStatsRow
 import au.edu.jcu.assessment.utilityapp.ui.components.TimerControls
@@ -27,11 +26,13 @@ import au.edu.jcu.assessment.utilityapp.ui.components.WeatherCard
 @Composable
 fun UtilityScreen(
     weatherState: WeatherUiState,
-    city: City,
+    locationName: String,
     unit: TemperatureUnit,
     timer: TimerUiState,
     today: DayStats,
     onRetryWeather: () -> Unit,
+    onAllowLocation: () -> Unit,
+    onSearchPlace: () -> Unit,
     onStartPause: () -> Unit,
     onReset: () -> Unit,
     modifier: Modifier = Modifier
@@ -46,9 +47,11 @@ fun UtilityScreen(
     ) {
         WeatherCard(
             state = weatherState,
-            city = city,
+            locationName = locationName,
             unit = unit,
-            onRetry = onRetryWeather
+            onRetry = onRetryWeather,
+            onAllowLocation = onAllowLocation,
+            onSearchPlace = onSearchPlace
         )
         TimerRing(
             progress = timer.progress,

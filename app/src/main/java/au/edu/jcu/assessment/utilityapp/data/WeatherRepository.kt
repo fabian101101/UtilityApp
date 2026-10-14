@@ -1,6 +1,6 @@
 package au.edu.jcu.assessment.utilityapp.data
 
-import au.edu.jcu.assessment.utilityapp.data.model.City
+import au.edu.jcu.assessment.utilityapp.data.model.Coordinates
 import au.edu.jcu.assessment.utilityapp.data.model.TemperatureUnit
 import au.edu.jcu.assessment.utilityapp.data.model.Weather
 import au.edu.jcu.assessment.utilityapp.data.remote.WeatherApi
@@ -12,7 +12,7 @@ import kotlin.coroutines.cancellation.CancellationException
 interface WeatherRepository {
 
     /** Fetches the current weather. Failures come back as [Result.failure], never as a crash. */
-    suspend fun getCurrentWeather(city: City, unit: TemperatureUnit): Result<Weather>
+    suspend fun getCurrentWeather(coordinates: Coordinates, unit: TemperatureUnit): Result<Weather>
 }
 
 /** The fields we ask Open-Meteo for. */
@@ -20,11 +20,14 @@ private const val CURRENT_FIELDS = "temperature_2m,weather_code,is_day"
 
 class NetworkWeatherRepository(private val api: WeatherApi) : WeatherRepository {
 
-    override suspend fun getCurrentWeather(city: City, unit: TemperatureUnit): Result<Weather> =
+    override suspend fun getCurrentWeather(
+        coordinates: Coordinates,
+        unit: TemperatureUnit
+    ): Result<Weather> =
         try {
             val response = api.getCurrentWeather(
-                latitude = city.latitude,
-                longitude = city.longitude,
+                latitude = coordinates.latitude,
+                longitude = coordinates.longitude,
                 currentFields = CURRENT_FIELDS,
                 temperatureUnit = unit.apiValue
             )
